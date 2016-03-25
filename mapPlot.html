@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+   <head>
+       <meta charset="utf-8">
+   </head>
+   <body style="height: 100%; margin: 0">
+       <div id="container" style="height: 100%"></div>
+       <script type="text/javascript" src="js/echarts.min.js"></script>
+       <script type="text/javascript" src="js/china.js"></script>
+       <script type="text/javascript" src="js/geoCoordMap.js"></script>
+       <script type="text/javascript" src="js/data.js"></script>
+       <script type="text/javascript">
+var dom = document.getElementById("container");
+var myChart = echarts.init(dom);
+var app = {};
+option = null;
+
+
+var convertData = function (data) {
+    var res = [];
+    for (var i = 0; i < data.length; i++) {
+        var geoCoord = geoCoordMap[data[i].name];
+        if (geoCoord) {
+            res.push({
+                name: data[i].name,
+                value: geoCoord.concat(data[i].value)
+            });
+        }
+    }
+    return res;
+};
+
+// var convertDataPie = function (data, len) {
+//     var res = [];
+//     for (var i = 0; i < len; i++) {
+//         var geoCoord = geoCoordMap[data[i].name];
+//         if (geoCoord) {
+//             res.push({
+//                 name: data[i].name,
+//                 value: geoCoord.concat(data[i].value)
+//             });
+//         }
+//     }
+//     var remain = 0;
+//     for (var i = len; i < data.length; i++) {
+//         remain += data[i].value;
+//     }
+//     res.push({
+//         name: "其他",
+//         value: "".concat(remain)
+//     });
+    
+//     return res;
+// }
+
+var convertDataLine = function (data) {
+    var res = [];
+    for (var i = 0; i < data.length; i++) {
+        var fromCoord = geoCoordMap[data[i].name];
+        var toCoord = [121.29,31.14]; //上海
+        if (fromCoord && toCoord) {
+            res.push([{
+                coord: fromCoord
+            }, {
+                coord: toCoord
+            }]);
+        }
+    }
+    return res;
+};
+
+deptList = ['妇科','皮肤科','中医内科','耳鼻喉科','眼科','骨科','神经内科','肿瘤科','消化科','内分泌科'];
+hospitalList = ['复旦大学附属华山医院（总院托管）','复旦大学附属肿瘤医院','上海交通大学医学院附属第九人民医院','复旦大学附属眼耳鼻喉科医院','上海中医药大学附属岳阳中西医结合医院','复旦大学附属妇产科医院（黄浦）','儿科医院(医联)','复旦大学附属妇产科医院（杨浦）','瑞金医院(医联)','岳阳医院青海路特诊部'];
+
+var color = ['#a6c84c', 
+'#ffa022', '#d3d30c','#46bee9','#5e71ff','#07af58','#a6c84c', '#ffa022', '#d3d30c','#46bee9','#5e71ff',
+'#ffa022', '#d3d30c','#46bee9','#5e71ff','#07af58','#a6c84c', '#ffa022', '#d3d30c','#46bee9','#5e71ff'];
+
+var series = [];
+[['All', dataMap.get('All')]].concat(getSeclectData(deptList), getSeclectData(hospitalList)).forEach(function (item, i) {
+    series.push(
+    {
+        name:  item[0],
+        type: 'lines',
+        zlevel: 2,
+        effect: {
+            show: true,
+            period: 6,
+            trailLength: 0
+        },
+        lineStyle: {
+            normal: {
+                color: color[i],
+                width: 1,
+                opacity: 0.4,
+                curveness: 0.2
+            }
+        },
+        data: convertDataLine(item[1].sort(function (a, b) {
+                return b.value - a.value;
+            }).slice(0, 100)),
+    },
+    {
+        name: item[0],
+        type: 'effectScatter',
+        coordinateSystem: 'geo',
+        zlevel: 2,
+        rippleEffect: {
+            brushType: 'stroke'
+        },
+        label: {
+            emphasis: {
+                show: false
+            }
+        },
+        symbolSize: function (val) {
+            return Math.max(Math.log(val[2])/Math.log(3),1);
+        },
+        itemStyle: {
+            normal: {
+                color: color[i],
+                opacity:0.5
+            },
+            emphasis: {
+                opacity: 1
+            }
+
+        },
+        data: convertData(item[1])
+    }
+    ,{
+        name: item[0],
+        type: 'scatter',
+        coordinateSystem: 'geo',
+        zlevel: 5,
+        label: {
+            normal: {
+                show: true,
+                position: 'right',
+                formatter: function (params) {
+                    var idx = params.dataIndex + 1;
+                    var name = params.data.name
+                    return  '[' + idx + ']' + name;
+                }
+            }
+        },
+        symbolSize: 1,
+        itemStyle: {
+            normal: {
+                color: '#fff',
+                opacity:0.8
+            }
+        },
+        data: convertData(item[1].sort(function (a, b) {
+                return b.value - a.value;
+            }).slice(1, 11)), //skip 上海
+    }
+    // ,{
+    //     name: item[0],
+    //     type: 'pie',
+    //     radius : '25%',
+    //     center: ['10%','20%'],
+    //     data : convertDataPie(item[1],30),
+    //     label: {
+    //             normal: {
+    //                 show : true,
+    //                 color: '#fff'
+    //             }
+    //     },
+    //     itemStyle: {
+    //         normal: {
+    //             color: color[i]
+    //         }
+    //     }
+    // }
+    );
+});
+
+option = {
+    backgroundColor: '#404a59',
+    title : {
+        text: '就医人群地区分布',
+        subtext: '根据患者手机号获取地区',
+        left: 'center',
+        textStyle : {
+            color: '#fff'
+        }
+    },
+    tooltip : {
+        trigger: 'item',
+        formatter: function (params,ticket,callback) {
+            if(params.seriesIndex == 0) { return; } //skip line series
+            var res = params.name +'<br/>';
+            var value = String(params.data.value);
+            res += '排名: ' + (params.dataIndex + 1);
+            res += '\t人数: ' + value.split(',')[2];
+            if(params.seriesIndex == 3) { 
+                res += '(' + params.percent + '%)'; 
+            } //add percent in pie chart
+            setTimeout(function (){callback(ticket, res);}, 10);
+            return 'loading';
+        }
+    },
+    legend: [{
+        orient: 'vertical',
+        top: 'bottom',
+        left: 'right',
+        data:["All"].concat(deptList),
+        textStyle: {
+            color: '#fff'
+        },
+        selectedMode: 'single',
+    },
+    {
+        orient: 'vertical',
+        top: 'bottom',
+        left: 'left',
+        data: ["All"].concat(hospitalList),
+        textStyle: {
+            color: '#fff'
+        },
+        selectedMode: 'single'
+    }],
+    geo: {
+        map: 'china',
+        label: {
+            emphasis: {
+                show: false
+            }
+        },
+        roam: true,
+        itemStyle: {
+            normal: {
+                areaColor: '#323c48',
+                borderColor: '#404a59'
+            },
+            emphasis: {
+                areaColor: '#2a333d'
+            }
+        }
+    },
+    series: series
+};
+if (option && typeof option === "object") {
+    var startTime = +new Date();
+    myChart.setOption(option, true);
+    var endTime = +new Date();
+    var updateTime = endTime - startTime;
+    console.log("Time used:", updateTime);
+}
+       </script>
+   </body>
+</html>
