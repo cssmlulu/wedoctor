@@ -15,20 +15,48 @@ var myChart = echarts.init(dom);
 var app = {};
 option = null;
 
+deptList = ['妇科','皮肤科','中医内科','耳鼻喉科','眼科','骨科','神经内科','肿瘤科','消化科','内分泌科'];
+hospitalList = ['复旦大学附属华山医院（总院托管）','复旦大学附属肿瘤医院','上海交通大学医学院附属第九人民医院','复旦大学附属眼耳鼻喉科医院','上海中医药大学附属岳阳中西医结合医院','复旦大学附属妇产科医院（黄浦）','儿科医院(医联)','复旦大学附属妇产科医院（杨浦）','瑞金医院(医联)','岳阳医院青海路特诊部'];
+
+var dataMap = dataMapProvince;
+
+var color = ['#46bee9','#a6c84c', 
+'#ffa022', '#d3d30c','#46bee9','#5e71ff','#07af58','#a6c84c', '#ffa022', '#d3d30c','#46bee9','#5e71ff',
+'#ffa022', '#d3d30c','#46bee9','#5e71ff','#07af58','#a6c84c', '#ffa022', '#d3d30c','#46bee9','#5e71ff'];
 
 var convertData = function (data) {
     var res = [];
     for (var i = 0; i < data.length; i++) {
         var geoCoord = geoCoordMap[data[i].name];
-        if (geoCoord) {
             res.push({
                 name: data[i].name,
-                value: geoCoord.concat(data[i].value)
+                value: [data[i].value, Math.log(data[i].value)/Math.log(1.1)],
+                coord: geoCoord
             });
-        }
     }
     return res;
 };
+
+var provinceList = ['上海', '浙江', '广东', '江苏', '安徽', '山东', '新疆', '北京', '河南', '福建', '贵州', '江西', '天津', '湖北', '辽宁', '湖南', '黑龙江', '甘肃', '吉林', '云南', '内蒙古', '宁夏', '陕西', '山西', '青海', '四川', '广西', '河北', '重庆', '海南', '西藏','台湾']
+
+var convertDataProvince = function(data) {
+    var res = [];
+    var map = {};
+    for (var i = 0; i < provinceList.length; i++) {map[provinceList[i]] = 0;}
+    for (var i = 0; i < data.length; i++) {
+        map[data[i].name] = data[i].value;
+    }
+    for (var key in map) {
+        var value = map[key];
+        var logValue = (value!=0)? Math.log(value)/Math.log(1.1) : 0;
+        res.push({
+            name: key,
+            value: [value, logValue]
+        })
+    }
+    return res;
+}
+
 
 // var convertDataPie = function (data, len) {
 //     var res = [];
@@ -53,108 +81,104 @@ var convertData = function (data) {
 //     return res;
 // }
 
-var convertDataLine = function (data) {
-    var res = [];
-    for (var i = 0; i < data.length; i++) {
-        var fromCoord = geoCoordMap[data[i].name];
-        var toCoord = [121.29,31.14]; //上海
-        if (fromCoord && toCoord) {
-            res.push([{
-                coord: fromCoord
-            }, {
-                coord: toCoord
-            }]);
-        }
-    }
-    return res;
-};
+// var convertDataLine = function (data) {
+//     var res = [];
+//     for (var i = 0; i < data.length; i++) {
+//         var fromCoord = geoCoordMap[data[i].name];
+//         var toCoord = [121.29,31.14]; //上海
+//         if (fromCoord && toCoord) {
+//             res.push([{
+//                 coord: fromCoord
+//             }, {
+//                 coord: toCoord
+//             }]);
+//         }
+//     }
+//     return res;
+// };
 
-deptList = ['妇科','皮肤科','中医内科','耳鼻喉科','眼科','骨科','神经内科','肿瘤科','消化科','内分泌科'];
-hospitalList = ['复旦大学附属华山医院（总院托管）','复旦大学附属肿瘤医院','上海交通大学医学院附属第九人民医院','复旦大学附属眼耳鼻喉科医院','上海中医药大学附属岳阳中西医结合医院','复旦大学附属妇产科医院（黄浦）','儿科医院(医联)','复旦大学附属妇产科医院（杨浦）','瑞金医院(医联)','岳阳医院青海路特诊部'];
-
-var color = ['#a6c84c', 
-'#ffa022', '#d3d30c','#46bee9','#5e71ff','#07af58','#a6c84c', '#ffa022', '#d3d30c','#46bee9','#5e71ff',
-'#ffa022', '#d3d30c','#46bee9','#5e71ff','#07af58','#a6c84c', '#ffa022', '#d3d30c','#46bee9','#5e71ff'];
 
 var series = [];
-[['All', dataMap.get('All')]].concat(getSeclectData(deptList), getSeclectData(hospitalList)).forEach(function (item, i) {
+var seriesMap = {};
+[['All', dataMap.get('All')]].concat(getSeclectData(deptList,dataMap), getSeclectData(hospitalList, dataMap)).forEach(function (item, i) {
+    seriesMap[item[0]] = convertDataProvince(item[1]);
     series.push(
-    {
-        name:  item[0],
-        type: 'lines',
-        zlevel: 2,
-        effect: {
-            show: true,
-            period: 6,
-            trailLength: 0
-        },
-        lineStyle: {
-            normal: {
-                color: color[i],
-                width: 1,
-                opacity: 0.4,
-                curveness: 0.2
-            }
-        },
-        data: convertDataLine(item[1].sort(function (a, b) {
-                return b.value - a.value;
-            }).slice(0, 100)),
-    },
-    {
-        name: item[0],
-        type: 'effectScatter',
-        coordinateSystem: 'geo',
-        zlevel: 2,
-        rippleEffect: {
-            brushType: 'stroke'
-        },
-        label: {
-            emphasis: {
-                show: false
-            }
-        },
-        symbolSize: function (val) {
-            return Math.max(Math.log(val[2])/Math.log(3),1);
-        },
-        itemStyle: {
-            normal: {
-                color: color[i],
-                opacity:0.5
-            },
-            emphasis: {
-                opacity: 1
-            }
+    // {
+    //     name:  item[0],
+    //     type: 'lines',
+    //     zlevel: 2,
+    //     effect: {
+    //         show: true,
+    //         period: 6,
+    //         trailLength: 0
+    //     },
+    //     lineStyle: {
+    //         normal: {
+    //             color: color[i],
+    //             width: 1,
+    //             opacity: 0.4,
+    //             curveness: 0.2
+    //         }
+    //     },
+    //     data: convertDataLine(item[1].sort(function (a, b) {
+    //             return b.value - a.value;
+    //         }).slice(0, 100)),
+    // },
+    // {
+    //     name: item[0],
+    //     type: 'effectScatter',
+    //     coordinateSystem: 'geo',
+    //     zlevel: 2,
+    //     rippleEffect: {
+    //         brushType: 'stroke'
+    //     },
+    //     label: {
+    //         emphasis: {
+    //             show: false
+    //         }
+    //     },
+    //     symbolSize: function (val) {
+    //         return Math.max(Math.log(val[2])/Math.log(3),1);
+    //     },
+    //     itemStyle: {
+    //         normal: {
+    //             color: color[i],
+    //             opacity:0.5
+    //         },
+    //         emphasis: {
+    //             opacity: 1
+    //         }
 
-        },
-        data: convertData(item[1])
-    }
-    ,{
-        name: item[0],
-        type: 'scatter',
-        coordinateSystem: 'geo',
-        zlevel: 5,
-        label: {
-            normal: {
-                show: true,
-                position: 'right',
-                formatter: function (params) {
-                    var idx = params.dataIndex + 1;
-                    var name = params.data.name
-                    return  '[' + idx + ']' + name;
-                }
-            }
-        },
-        symbolSize: 1,
-        itemStyle: {
-            normal: {
-                color: '#fff',
-                opacity:0.8
-            }
-        },
-        data: convertData(item[1].sort(function (a, b) {
-                return b.value - a.value;
-            }).slice(1, 11)), //skip 上海
-    }
+    //     },
+    //     data: convertData(item[1])
+    // }
+    // ,{
+    //     name: item[0],
+    //     type: 'scatter',
+    //     coordinateSystem: 'geo',
+    //     zlevel: 5,
+    //     label: {
+    //         normal: {
+    //             show: true,
+    //             position: 'right',
+    //             formatter: function (params) {
+    //                 var idx = params.dataIndex + 1;
+    //                 var name = params.data.name
+    //                 return  '[' + idx + ']' + name;
+    //             }
+    //         }
+    //     },
+    //     symbolSize: 1,
+    //     itemStyle: {
+    //         normal: {
+    //             color: '#fff',
+    //             opacity:0.8
+    //         }
+    //     },
+    //     data: convertData(item[1].sort(function (a, b) {
+    //             return b.value - a.value;
+    //         }).slice(1, 11)), //skip 上海
+    // }
     // ,{
     //     name: item[0],
     //     type: 'pie',
@@ -173,7 +197,30 @@ var series = [];
     //         }
     //     }
     // }
-    );
+    {
+            name: item[0],
+            type: 'map',
+            mapType: 'china',
+            roam: false,
+            label: {
+                normal: {
+                    show: true
+                },
+                emphasis: {
+                    show: true
+                }
+            },
+            itemStyle: {
+                normal: {
+                    color: color[i]
+                },
+                emphasis: {
+                    shadowBlur: 20,
+                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                }
+            },
+            data: convertDataProvince(item[1])
+    })
 });
 
 option = {
@@ -189,15 +236,13 @@ option = {
     tooltip : {
         trigger: 'item',
         formatter: function (params,ticket,callback) {
-            if(params.seriesIndex == 0) { return; } //skip line series
             var res = params.name +'<br/>';
-            var value = String(params.data.value);
+            var value = 0;
+            if (params.data.value) {value = String(params.data.value);}
+            
             res += '排名: ' + (params.dataIndex + 1);
-            res += '\t人数: ' + value.split(',')[2];
-            if(params.seriesIndex == 3) { 
-                res += '(' + params.percent + '%)'; 
-            } //add percent in pie chart
-            setTimeout(function (){callback(ticket, res);}, 10);
+            res += '\t人数: ' + value;
+            setTimeout(function (){callback(ticket, res);}, 1);
             return 'loading';
         }
     },
@@ -221,26 +266,57 @@ option = {
         },
         selectedMode: 'single'
     }],
-    geo: {
-        map: 'china',
-        label: {
-            emphasis: {
-                show: false
+    // geo: {
+    //     map: 'china',
+    //     label: {
+    //         emphasis: {
+    //             show: false
+    //         }
+    //     },
+    //     roam: true,
+    //     itemStyle: {
+    //         normal: {
+    //             areaColor: '#323c48',
+    //             borderColor: '#404a59'
+    //         },
+    //         emphasis: {
+    //             areaColor: '#2a333d'
+    //         }
+    //     }
+    // },
+    visualMap: {
+        min: 30,
+        max: 100,
+        left: 'left',
+        top: 'top',
+        dimension:1,
+        // seriesIndex: 0,        
+        calculable: true,
+        formatter: function (value, value2) {
+            return Math.round(Math.exp(value * Math.log(1.1)));
+        },
+        target:{
+            inRange: {
+                // color: ['#a6c84c'],
+                colorLightness: [1, 0.2]
+            },
+            outOfRange: {
+                color: ['#444']
             }
         },
-        roam: true,
-        itemStyle: {
-            normal: {
-                areaColor: '#323c48',
-                borderColor: '#404a59'
+        controller: {
+            inRange: {
+                color: ['#50a3ba','#eac736','#d94e5d']
+                // colorLightness: [1, 0.5]
             },
-            emphasis: {
-                areaColor: '#2a333d'
-            }
+            outOfRange: {
+                color: ['#444']
+            }            
         }
     },
     series: series
 };
+
 if (option && typeof option === "object") {
     var startTime = +new Date();
     myChart.setOption(option, true);
@@ -248,6 +324,25 @@ if (option && typeof option === "object") {
     var updateTime = endTime - startTime;
     console.log("Time used:", updateTime);
 }
+
+
+myChart.on('legendselectchanged', function (params) {
+    var max = 0;
+    series = seriesMap[params.name];
+    for(var i=0; i<series.length; i++) {
+        if(series[i].name == "上海") { max = series[i].value[1];}
+    }
+    myChart.setOption({
+        visualMap: {
+            max: max
+        }
+    },false);
+    myChart.dispatchAction({
+        type: 'selectDataRange',
+        selected: [0,max]
+    })
+});
+
        </script>
    </body>
 </html>
