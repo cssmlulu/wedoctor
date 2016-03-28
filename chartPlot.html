@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+   <head>
+       <meta charset="utf-8">
+       <style type="text/css">
+            #tabs1 { float:left; width:100%; background:#F4F7FB; font-size:93%; line-height:normal; border-bottom:1px solid #BCD2E6; }
+            #tabs1 ul { margin:0; padding:10px 10px 0 50px; list-style:none; }
+            #tabs1 li { display:inline; margin:0; padding:0; }
+            #tabs1 a { float:left; background:url("images/tableft1.gif") no-repeat left top; margin:0; padding:0 0 0 4px; text-decoration:none; }
+            #tabs1 a span { float:left; display:block; background:url("images/tabright1.gif") no-repeat right top; padding:5px 15px 4px 6px; color:#627EB7; }
+            /* Commented Backslash Hack hides rule from IE5-Mac \*/
+            #tabs1 a span { float:none; }
+            /* End IE5-Mac hack */
+            #tabs a:hover span { color:#627EB7; }
+            #tabs1 a:hover { background-position:0% -42px; }
+            #tabs1 a:hover span { background-position:100% -42px; }
+        </style>
+   </head>
+   <body style="height: 100%">
+        <div id="tabs1">
+            <ul>
+                <li><a href="#" class='hospital'><span>按医院分布</span></a></li>
+                <li><a href="#" class='dept'><span>按科室分布</span></a></li>
+                <li><a href="mapPlot.html"><span>地图模式</span></a></li>
+            </ul>
+        </div>
+        <div style="clear:both;"></div>
+        <div id="container" style="height: 100%"></div>
+        <script src="http://lib.sinaapp.com/js/jquery/1.9.1/jquery-1.9.1.min.js"></script>
+        <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/echarts-all-3.0.0.js"></script>
+        <script type="text/javascript" src="js/data.js"></script>
+        <script type="text/javascript">
+var dom = document.getElementById("container");
+var myChart = echarts.init(dom);
+var app = {};
+option = null;
+
+
+provinceList = ['上海', '江苏', '浙江', '安徽', '广东', '江西', '福建', '河南', '山东', '北京', '湖北', '黑龙江', '湖南', '陕西', '河北', '辽宁', '四川', '吉林', '山西', '广西', '贵州', '重庆', '云南', '新疆', '内蒙古', '甘肃', '天津', '海南', '宁夏', '青海', '西藏'];
+deptList = ['妇科', '皮肤科', '中医内科', '耳鼻喉科', '眼科', '骨科', '神经内科', '肿瘤科', '消化科', '内分泌科', '中医科', '内科', '泌尿外科', '呼吸科', '普外科', '儿科', '神经外科', '胸外科', '心内科', '耳鼻喉科普通门诊'];
+hospitalList = ['复旦大学附属华山医院（总院托管）', '复旦大学附属肿瘤医院', '上海交通大学医学院附属第九人民医院', '复旦大学附属眼耳鼻喉科医院',
+       '上海中医药大学附属岳阳中西医结合医院', '复旦大学附属妇产科医院（黄浦）', '儿科医院(医联)', '复旦大学附属妇产科医院（杨浦）',
+       '瑞金医院(医联)', '岳阳医院青海路特诊部', '上海中医药大学附属龙华医院（医联）', '新华医院(医联)', '第六人民医院(医联)',
+       '曙光西院(医联)', '复旦大学附属中山医院', '仁济医院东院(医联)', '复旦大学附属中山医院特需门诊部',
+       '上海国际和平妇幼保健院', '复旦大学附属华东医院', '上海中医药大学附属曙光医院东院(医联)'];
+
+dataList=hospitalList;
+
+function prepareOptions(dataList) {
+    options = [];
+    getSeclectData(dataList,dataMapProvince).forEach(function (item, i) {
+        var sum = item[1].reduce( function(a,b) {
+            return a + b.value;
+        }, 0);
+        options.push(
+            {
+                title: {text: item[0]},
+                series: [
+                    {data: item[1].slice(1)},
+                    {
+                        data: item[1].map( function(x) { return (1.0 * x.value/sum).toFixed(4);}).slice(1),
+                        yAxisIndex: 1
+                    },
+                    {data: item[1]}
+                ]
+            }
+            )
+    });
+    return options;  
+}
+
+
+
+option = {
+    baseOption: {
+        timeline: {
+            axisType: 'category',
+            autoPlay: false,
+            playInterval: 1000,
+            data: dataList,
+            // label: {
+            //     formatter : '{value}'
+            // }
+        },
+        title: {
+            subtext: '外地人口就医分布'
+        },
+        toolbox: {
+            feature: {
+                dataView: {show: true, readOnly: false},
+                magicType: {show: true, type: ['line', 'bar']},
+                restore: {show: true},
+                saveAsImage: {show: true}
+            }
+        },
+        tooltip : {
+            trigger: 'axis'
+            // formatter: "{a} <br/>{b} : {c} ({d}%)"
+        },
+        legend: {
+            x: 'center',
+            data: ['人数','百分比','饼图'],
+            selected: {
+                '饼图': false
+            }
+        },
+        calculable : true,
+        grid: {
+            top: 80,
+            bottom: 100
+        },
+        xAxis: [
+            {
+                'type':'category',
+                'axisLabel':{'interval':0},
+                'data': provinceList.slice(1),
+                splitLine: {show: false}
+            }
+        ],
+        yAxis: [
+            {
+                type: 'value',
+                name: '人数',
+            },
+            {
+                type: 'value',
+                name: '百分比',
+                max: 0.2,
+                min: -0.2
+            }           
+        ],
+        series: [
+            {
+                name: '人数', 
+                type: 'bar',
+                label: {
+                    normal: {
+                        show: true,
+                        position: 'top'
+                    },
+                    emphasis: {
+                        show: true
+                    }
+                }
+            },
+            {
+                name: '百分比',
+                type: 'line',
+                label: {
+                    normal: {
+                        show: false
+                    },
+                    emphasis: {
+                        show: true,
+                        position: 'top',
+                        formatter: function (params) {
+                            value = (params.value * 100).toFixed(2);
+                            return String(value) + '%';
+                        }
+                    }
+                }
+            },
+            {
+                name: '饼图', 
+                type: 'pie', 
+                center: ['75%', '35%'],
+                radius: '40%',
+                label: {
+                    normal: {
+                        show: false
+                    },
+                    emphasis: {
+                        show: true
+                    }
+                },
+                lableLine: {
+                    normal: {
+                        show: false
+                    },
+                    emphasis: {
+                        show: true
+                    }
+                },
+            }
+        ]
+    },
+    options: prepareOptions(dataList)
+};
+
+
+if (option && typeof option === "object") {
+    var startTime = +new Date();
+    myChart.setOption(option, true);
+    var endTime = +new Date();
+    var updateTime = endTime - startTime;
+    console.log("Time used:", updateTime);
+}
+
+$('.hospital').on('click', function () {
+    myChart.setOption(
+        {
+            baseOption: {
+                timeline : {
+                    data:hospitalList
+                }
+            },
+            options:prepareOptions(hospitalList)
+        }
+    );
+});
+$('.dept').on('click', function () {
+    myChart.setOption(
+        {
+            baseOption: {
+                timeline : {
+                    data:deptList
+                }
+            },
+            options:prepareOptions(deptList)
+        }
+    );
+    console.log(myChart.getOption());
+});
+       </script>
+   </body>
+</html>
