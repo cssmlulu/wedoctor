@@ -337,10 +337,10 @@ option = {
     visualMap: {
         min: 30,
         max: 100,
-        left: 'left',
+        left: 'right',
         top: 'top',
         dimension:3,
-        seriesIndex: [0,1,2] ,    
+        seriesIndex: 0,    
         calculable: true,
         formatter: function (value, value2) {
             return Math.round(Math.exp(value * Math.log(1.1)));
