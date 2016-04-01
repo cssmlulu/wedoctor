@@ -2,65 +2,80 @@
 <html style="height: 100%">
 <head>
 <meta charset="utf-8">
-<link rel="stylesheet" type="text/css" href='css/header.css'>
+<link rel="stylesheet" type="text/css" href='css/style.css'>
 </head>
+
 <body style="height: 100%">
-    <div id="tabs1">
-        <ul>
-            <li><a href="#" class='hospital'><span>按医院分布</span></a></li>
-            <li><a href="#" class='dept'><span>按科室分布</span></a></li>
-            <li><a href="mapPlot.html"><span>地图模式</span></a></li>
-        </ul>
-    </div>
-    <div style="clear:both;"></div>
-    <div id="container" style="height: 100%"></div>
-    <script src="http://lib.sinaapp.com/js/jquery/1.9.1/jquery-1.9.1.min.js"></script>
-    <script type="text/javascript" src="js/echarts.min.js"></script>
-    <script type="text/javascript" src="js/data.js"></script>
-    <script type="text/javascript">
+<div class='label'>
+    <input type="file" id='hospitalFile' class='inputfile'/> 
+    <label for="hospitalFile"><span></span><strong>医院数据</strong></lable>    
+</div>
+<div class='label'>
+    <input type="file" id='deptFile' class='inputfile'/> 
+    <label for="deptFile"><span></span><strong>科室数据</strong></lable>    
+</div>
+<div id="tabs1">
+    <ul>
+        <li><a href="#" class='hospital'><span>按医院分布</span></a></li>
+        <li><a href="#" class='dept'><span>按科室分布</span></a></li>
+        <li><a href="mapPlot.html"><span>地图模式</span></a></li>
+    </ul>
+</div>
+<div style="clear:both;"></div>
+<div id="container" style="height: 100%"></div>
+
+<script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="js/echarts.min.js"></script>
+<script type="text/javascript" src="js/papaparse.min.js"></script>
+
+<script type="text/javascript" src="js/custom-file-input.js"></script>
+<script type="text/javascript">
 var dom = document.getElementById("container");
 var myChart = echarts.init(dom);
 var app = {};
-option = null;
 
 
-provinceList = ['上海', '江苏', '浙江', '安徽', '广东', '江西', '福建', '河南', '山东', '北京', '湖北', '黑龙江', '湖南', '陕西', '河北', '辽宁', '四川', '吉林', '山西', '广西', '贵州', '重庆', '云南', '新疆', '内蒙古', '甘肃', '天津', '海南', '宁夏', '青海', '西藏'];
+function  handleFiles(files)  
+{  
+    var file = files[0];  
+    if (!file) {
+        alert("未选择相关数据文件！");
+        return;
+    }
+    Papa.parse(file, {
+        header: true,
+        encoding: 'gbk',
+        complete: function(rst) {
+            option = setOption(rst);
+            myChart.setOption(option, true);
+            deptList = rst.data.map(csvToDataList);    
+        } 
+    });
+}  
 
-deptList = ['妇科', '皮肤科', '中医内科', '耳鼻喉科', '眼科', '骨科', '神经内科', '肿瘤科', '消化科', '内分泌科',
-       '中医科', '内科', '泌尿外科', '呼吸科', '普外科', '儿科', '神经外科', '胸外科', '心内科',
-       '耳鼻喉科普通门诊', '乳腺外科', '耳鼻喉特需科', '口腔外科', '眼科专家', '肾内科', '口腔科', '消化内科',
-       '血液科', '眼特需门诊', '乳腺科', '化疗科', '围产医学', '头颈外科', '中西医科', '肺内科', '宝庆路眼科',
-       '整复外科', '泌尿科', '中西医结合科', '眼科普通门诊', '儿内科', '心血管内科', '呼吸内科', '肛肠科',
-       '口腔修复科', '乳腺肿瘤', '副主任专家(皮肤科)', '中西医结合门诊', '放射治疗科', '颌面头颈肿瘤'];
-
-hospitalList = ['复旦大学附属华山医院（总院托管）', '复旦大学附属肿瘤医院', '上海交通大学医学院附属第九人民医院', '复旦大学附属眼耳鼻喉科医院',
-       '上海中医药大学附属岳阳中西医结合医院', '复旦大学附属妇产科医院（黄浦）', '儿科医院(医联)', '复旦大学附属妇产科医院（杨浦）',
-       '瑞金医院(医联)', '岳阳医院青海路特诊部', '上海中医药大学附属龙华医院（医联）', '新华医院(医联)', '第六人民医院(医联)',
-       '曙光西院(医联)', '复旦大学附属中山医院', '仁济医院东院(医联)', '复旦大学附属中山医院特需门诊部',
-       '上海国际和平妇幼保健院', '复旦大学附属华东医院', '上海中医药大学附属曙光医院东院(医联)', '中医医院(医联)',
-       '肺科医院(医联)', '儿童医学中心(医联)', '上海长征医院', '第二军医大学附属长海医院', '胸科医院(医联)',
-       '上海交通大学附属第一人民医院（医联）', '长海医院(医联)', '中医医院石门路门诊部(医联)', '上海第十人民医院',
-       '复旦大学附属华山医院东院', '仁济医院西院(医联)', '眼耳鼻喉科医院宝庆分院', '上海市中西医结合医院',
-       '上海市皮肤病医院(武夷路)', '瑞金医院北院(医联)', '上海市东方医院', '上海交通大学附属第一人民医院松江南院(医联)',
-       '复旦大学附属华山医院（总院）', '长征医院(医联)', '同济医院(医联)', '上海市儿童医院北京西路院区(医联)',
-       '中国人民解放军第411医院', '第一妇婴保健院西院(医联)', '上海惠慈中西医结合门诊部', '复旦大学附属华山医院北院',
-       '上海市儿童医院普陀新院（医联）', '中国人民武装警察部队上海市总队医院', '中国人民解放军第455医院', '上海东方肝胆外科医院'];
-
-dataList=hospitalList;
+function csvToDataList(x) {
+    var idx = x[""];
+    delete x[""];
+    rst = Object.keys(x).map(function(key){
+        
+            return {"name":key,"value":x[key]};
+    } );
+    return [idx,rst];
+}
 
 function prepareOptions(dataList) {
     options = [];
-    getSeclectData(dataList,dataMapProvince).forEach(function (item, i) {
+    dataList.forEach(function (item, i) {
         var sum = item[1].reduce( function(a,b) {
-            return a + b.value;
+            return a + parseInt(b.value);
         }, 0);
         options.push(
             {
                 title: {text: item[0]},
                 series: [
-                    {data: item[1].slice(1)},
+                    {data: item[1]},
                     {
-                        data: item[1].map( function(x) { return (1.0 * x.value/sum).toFixed(4);}).slice(1),
+                        data: item[1].map( function(x) { return (1.0 * x.value/sum).toFixed(4);}),
                         yAxisIndex: 1
                     },
                     {data: item[1]}
@@ -72,157 +87,146 @@ function prepareOptions(dataList) {
 }
 
 
-
-option = {
-    baseOption: {
-        timeline: {
-            axisType: 'category',
-            autoPlay: false,
-            playInterval: 1000,
-            data: dataList,
-            // label: {
-            //     formatter : '{value}'
-            // }
-        },
-        title: {
-            subtext: '外地人口就医分布'
-        },
-        toolbox: {
-            feature: {
-                dataView: {show: true, readOnly: false},
-                magicType: {show: true, type: ['line', 'bar']},
-                restore: {show: true},
-                saveAsImage: {show: true}
-            }
-        },
-        tooltip : {
-            trigger: 'axis'
-            // formatter: "{a} <br/>{b} : {c} ({d}%)"
-        },
-        legend: {
-            x: 'center',
-            data: ['人数','百分比','饼图'],
-            selected: {
-                '饼图': false
-            }
-        },
-        calculable : true,
-        grid: {
-            top: 80,
-            bottom: 100
-        },
-        xAxis: [
-            {
-                'type':'category',
-                'axisLabel':{'interval':0},
-                'data': provinceList.slice(1),
-                splitLine: {show: false}
-            }
-        ],
-        yAxis: [
-            {
-                type: 'value',
-                name: '人数',
+function setOption(rst) {
+    dataList = rst.data.slice(0,10).map(csvToDataList);
+    nameList = dataList.map(function(x){return x[0];});
+    provinceList = rst.meta.fields.slice(1); //first grid in the matrix is empty
+    option = {
+        baseOption: {
+            timeline: {
+                axisType: 'category',
+                autoPlay: false,
+                playInterval: 1000,
+                data: nameList,
+                // label: {
+                //     formatter : '{value}'
+                // }
             },
-            {
-                type: 'value',
-                name: '百分比',
-                max: 0.2,
-                min: -0.2
-            }           
-        ],
-        series: [
-            {
-                name: '人数', 
-                type: 'bar',
-                label: {
-                    normal: {
-                        show: true,
-                        position: 'top'
-                    },
-                    emphasis: {
-                        show: true
-                    }
+            title: {
+                subtext: '外地人口就医分布'
+            },
+            toolbox: {
+                feature: {
+                    dataView: {show: true, readOnly: false},
+                    magicType: {show: true, type: ['line', 'bar']},
+                    restore: {show: true},
+                    saveAsImage: {show: true}
                 }
             },
-            {
-                name: '百分比',
-                type: 'line',
-                label: {
-                    normal: {
-                        show: false
-                    },
-                    emphasis: {
-                        show: true,
-                        position: 'top',
-                        formatter: function (params) {
-                            value = (params.value * 100).toFixed(2);
-                            return String(value) + '%';
+            tooltip : {
+                trigger: 'item' // or 'axis'
+                // formatter: "{a} <br/>{b} : {c} ({d}%)"
+            },
+            legend: {
+                x: 'center',
+                data: ['人数','百分比','饼图'],
+                selected: {
+                    '百分比': false,
+                    '饼图': false
+                }
+            },
+            calculable : true,
+            grid: {
+                top: 80,
+                bottom: 100
+            },
+            xAxis: [
+                {
+                    'type':'category',
+                    'axisLabel':{'interval':0},
+                    'data': provinceList,
+                    splitLine: {show: false}
+                }
+            ],
+            yAxis: [
+                {
+                    type: 'value',
+                    name: '人数',
+                },
+                {
+                    type: 'value',
+                    name: '百分比',
+                    // max: 0.2,
+                    // min: -0.2
+                }           
+            ],
+            series: [
+                {
+                    name: '人数', 
+                    type: 'bar',
+                    label: {
+                        normal: {
+                            show: true,
+                            position: 'top'
+                        },
+                        emphasis: {
+                            show: true
                         }
                     }
+                },
+                {
+                    name: '百分比',
+                    type: 'line',
+                    label: {
+                        normal: {
+                            show: false
+                        },
+                        emphasis: {
+                            show: true,
+                            position: 'top',
+                            formatter: function (params) {
+                                value = (params.value * 100).toFixed(2);
+                                return String(value) + '%';
+                            }
+                        }
+                    }
+                },
+                {
+                    name: '饼图', 
+                    type: 'pie', 
+                    center: ['75%', '35%'],
+                    radius: '40%',
+                    label: {
+                        normal: {
+                            show: false
+                        },
+                        emphasis: {
+                            show: true
+                        }
+                    },
+                    lableLine: {
+                        normal: {
+                            show: false
+                        },
+                        emphasis: {
+                            show: true
+                        }
+                    },
                 }
-            },
-            {
-                name: '饼图', 
-                type: 'pie', 
-                center: ['75%', '35%'],
-                radius: '40%',
-                label: {
-                    normal: {
-                        show: false
-                    },
-                    emphasis: {
-                        show: true
-                    }
-                },
-                lableLine: {
-                    normal: {
-                        show: false
-                    },
-                    emphasis: {
-                        show: true
-                    }
-                },
-            }
-        ]
-    },
-    options: prepareOptions(dataList)
-};
-
-
-if (option && typeof option === "object") {
-    var startTime = +new Date();
-    myChart.setOption(option, true);
-    var endTime = +new Date();
-    var updateTime = endTime - startTime;
-    console.log("Time used:", updateTime);
+            ]
+        },
+        options:prepareOptions(dataList)
+    };
+    return option;
 }
 
+
+// if (option && typeof option === "object") {
+//     var startTime = +new Date();
+//     myChart.setOption(option, true);
+//     var endTime = +new Date();
+//     var updateTime = endTime - startTime;
+//     console.log("Time used:", updateTime);
+// }
+
 $('.hospital').on('click', function () {
-    myChart.setOption(
-        {
-            baseOption: {
-                timeline : {
-                    data:hospitalList
-                }
-            },
-            options:prepareOptions(hospitalList)
-        }
-    );
+    file = ($('#hospitalFile'))[0].files;
+    handleFiles(file);
 });
 $('.dept').on('click', function () {
-    myChart.setOption(
-        {
-            baseOption: {
-                timeline : {
-                    data:deptList
-                }
-            },
-            options:prepareOptions(deptList)
-        }
-    );
-    console.log(myChart.getOption());
+    file = ($('#deptFile'))[0].files;
+    handleFiles(file);
 });
-       </script>
-   </body>
+    </script>
+</body>
 </html>
