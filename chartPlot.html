@@ -228,7 +228,7 @@ $('.dept').on('click', function () {
     file = ($('#deptFile'))[0].files;
     handleFiles(file);
 });
-$('#deptFile.inputfile').on('click', function () {
+$('#deptFile.inputfile').change(function () {
     file = ($('#deptFile'))[0].files;
     handleFiles(file);
 });
