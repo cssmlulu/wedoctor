@@ -97,10 +97,7 @@ function setOption(rst) {
                 axisType: 'category',
                 autoPlay: false,
                 playInterval: 1000,
-                data: nameList,
-                // label: {
-                //     formatter : '{value}'
-                // }
+                data: nameList
             },
             title: {
                 subtext: '外地人口就医分布'
@@ -223,7 +220,15 @@ $('.hospital').on('click', function () {
     file = ($('#hospitalFile'))[0].files;
     handleFiles(file);
 });
+$('#hospitalFile.inputfile').change(function () {
+    file = ($('#hospitalFile'))[0].files;
+    handleFiles(file);
+});
 $('.dept').on('click', function () {
+    file = ($('#deptFile'))[0].files;
+    handleFiles(file);
+});
+$('#deptFile.inputfile').on('click', function () {
     file = ($('#deptFile'))[0].files;
     handleFiles(file);
 });

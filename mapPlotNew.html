@@ -18,7 +18,7 @@
     <ul>
         <li><a href="#" class='hospital'><span>按医院分布</span></a></li>
         <li><a href="#" class='dept'><span>按科室分布</span></a></li>
-        <li><a href="mapPlot.html"><span>图表模式</span></a></li>
+        <li><a href="chartPlot.html"><span>图表模式</span></a></li>
     </ul>
 </div>
 <div style="clear:both;"></div>
@@ -111,10 +111,16 @@ function prepareOptions(dataList) {
     dataList.forEach(function (item, i) {
         options.push(
         {
-            series: {
+            title: {subtext: item[0]},
+            series: [
+            {
                 name: item[0],
                 data: convertData(item[1])
-            }
+            },
+            {
+                name: item[0],
+                data: convertData(item[1])
+            }]
         });
     });
     return options;
@@ -227,7 +233,8 @@ function setOption(rst) {
                     }            
                 }
             },
-            series:    {
+            series:    [
+            {
                 type: 'map',
                 mapType: 'china',
                 // roam: true,
@@ -249,7 +256,33 @@ function setOption(rst) {
                         shadowColor: '#fff'
                     }
                 },
-            }
+            },
+            {
+                type: 'effectScatter',
+                coordinateSystem: 'geo',
+                // zlevel: 1,
+                rippleEffect: {
+                    brushType: 'stroke'
+                },
+                label: {
+                    emphasis: {
+                        show: false
+                    }
+                },
+                symbolSize: function (val) {
+                    return Math.max(Math.log(val[2])/Math.log(3),1);
+                },
+                itemStyle: {
+                    normal: {
+                        // color: color[i],
+                        opacity:0.5
+                    },
+                    emphasis: {
+                        opacity: 1
+                    }
+
+                }
+            }]
         },
         options: prepareOptions(dataList)
     };
@@ -268,7 +301,15 @@ $('.hospital').on('click', function () {
     file = ($('#hospitalFile'))[0].files;
     handleFiles(file);
 });
+$('#hospitalFile.inputfile').change(function () {
+    file = ($('#hospitalFile'))[0].files;
+    handleFiles(file);
+});
 $('.dept').on('click', function () {
+    file = ($('#deptFile'))[0].files;
+    handleFiles(file);
+});
+$('#deptFile.inputfile').on('click', function () {
     file = ($('#deptFile'))[0].files;
     handleFiles(file);
 });
