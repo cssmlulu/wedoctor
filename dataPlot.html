@@ -36,6 +36,8 @@ var myChart = echarts.init(dom);
 var app = {};
 option = null;
 
+var timelineLength = 40;
+
 function  handleFiles(files, optionType)  
 {  
     var file = files[0];  
@@ -167,7 +169,7 @@ function prepareChartOptions(dataList) {
 
 
 function setOption(rst, optionType) {
-    dataList = rst.data.slice(0,10).map(csvToDataList);
+    dataList = rst.data.slice(0,timelineLength).map(csvToDataList);
     nameList = dataList.map(function(x){return x[0];});
     provinceList = rst.meta.fields.slice(1); //first grid in the matrix is empty
     mapOption = {
@@ -484,7 +486,7 @@ function setOption(rst, optionType) {
                 data: ['人数','百分比','饼图'],
                 selected: {
                     '百分比': false,
-                    '饼图': false
+                    // '饼图': false
                 }
             },
             calculable : true,
