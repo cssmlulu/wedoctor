@@ -2,6 +2,7 @@
 <html style="height: 100%">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="stylesheet" type="text/css" href='css/style.css'>
 </head>
 
@@ -10,7 +11,7 @@
     <input type="file" id='provinceFile' class='inputfile'/> 
     <label for="provinceFile"><span></span><strong>省份数据</strong></lable>    
 </div>
-<div class='label'>
+<!-- <div class='label'>
     <input type="file" id='cityFile' class='inputfile'/> 
     <label for="cityFile"><span></span><strong>城市数据</strong></lable>    
 </div>
@@ -21,7 +22,7 @@
         <li><a href="#" class='chart'><span>图表模式</span></a></li>
     </ul>
 </div>
-<div style="clear:both;"></div>
+<div style="clear:both;"></div> -->
 <div id="container" style="height: 85%"></div>
 
 <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
@@ -66,90 +67,103 @@ function csvToDataList(x) {
     return [idx,rst];
 }
 
-var convertData = function (data) {
+// var convertDataGeo = function (data) {
+//     var res = [];
+//     for (var i = 0; i < data.length; i++) {
+//         var geoCoord = geoCoordMap[data[i].name];
+//         if(!geoCoord){geoCoord=[0,0]}
+//             res.push({
+//                 name: data[i].name,
+//                 value: geoCoord.concat([data[i].value, Math.log(data[i].value)/Math.log(1.1)])
+//             });
+//     }
+//     return res;
+// };
+
+var convertLogData = function (data) {
     var res = [];
     for (var i = 0; i < data.length; i++) {
-        var geoCoord = geoCoordMap[data[i].name];
-        if(!geoCoord){geoCoord=[0,0]}
             res.push({
                 name: data[i].name,
-                value: geoCoord.concat([data[i].value, Math.log(data[i].value)/Math.log(1.1)])
+                value: [data[i].value, Math.log(data[i].value)/Math.log(1.1)]
             });
     }
     return res;
 };
 
-var convertDataLine = function (data) {
-    var res = [];
-    for (var i = 0; i < data.length; i++) {
-        var fromCoord = geoCoordMap[data[i].name];
-        var toCoord = [121.29,31.14]; //上海
-        if (fromCoord && toCoord) {
-            res.push([{
-                coord: fromCoord
-            }, {
-                coord: toCoord
-            }]);
-        }
-    }
-    return res;
-};
+// var convertDataLine = function (data) {
+//     var res = [];
+//     for (var i = 0; i < data.length; i++) {
+//         var fromCoord = geoCoordMap[data[i].name];
+//         var toCoord = [121.29,31.14]; //上海
+//         if (fromCoord && toCoord) {
+//             res.push([{
+//                 coord: fromCoord
+//             }, {
+//                 coord: toCoord
+//             }]);
+//         }
+//     }
+//     return res;
+// };
 
 
-function prepareMapOptions(dataList) {
-    options = [];
-    dataList.forEach(function (item, i) {
-        var max = Math.max.apply(Math,item[1].map(function(o){return o.value;}))
-        options.push(
-        {
-            title: {subtext: item[0]},
-            series: [
-            {
-                name: item[0],
-                data: convertData(item[1])
-            }],
-            visualMap: {
-                max : Math.log(max)/Math.log(1.1)
-            }
-        });
-    });
-    return options;
-}
+// function prepareMapOptions(dataList) {
+//     options = [];
+//     dataList.forEach(function (item, i) {
+//         var max = Math.max.apply(Math,item[1].map(function(o){return o.value;}))
+//         options.push(
+//         {
+//             title: {subtext: item[0]},
+//             series: [
+//             {
+//                 name: item[0],
+//                 data: convertData(item[1])
+//             }],
+//             visualMap: {
+//                 max : Math.log(max)/Math.log(1.1)
+//             }
+//         });
+//     });
+//     return options;
+// }
 
-function prepareGeoOptions(dataList) {
-    options = [];
-    dataList.forEach(function (item, i) {
-        options.push(
-        {
-            title: {subtext: item[0]},
-            series: [
-            {
-                name: item[0],
-                data: convertData(item[1])
-            },
-            {
-                name: item[0],
-                data: convertDataLine(item[1].sort(function (a, b) {
-                    return b.value - a.value;
-                }).slice(0, 100)),
-            },
-            {
-                name: item[0],
-                data: convertData(item[1].sort(function (a, b) {
-                    return b.value - a.value;
-                }).slice(1, 11)), //skip 上海
-            }]
-        });
-    });
-    return options;
-}
+// function prepareGeoOptions(dataList) {
+//     options = [];
+//     dataList.forEach(function (item, i) {
+//         options.push(
+//         {
+//             title: {subtext: item[0]},
+//             series: [
+//             {
+//                 name: item[0],
+//                 data: convertData(item[1])
+//             },
+//             {
+//                 name: item[0],
+//                 data: convertDataLine(item[1].sort(function (a, b) {
+//                     return b.value - a.value;
+//                 }).slice(0, 100)),
+//             },
+//             {
+//                 name: item[0],
+//                 data: convertData(item[1].sort(function (a, b) {
+//                     return b.value - a.value;
+//                 }).slice(1, 11)), //skip 上海
+//             }]
+//         });
+//     });
+//     return options;
+// }
 
 function prepareChartOptions(dataList) {
     options = [];
     dataList.forEach(function (item, i) {
+        //item: a list of k/v objects
         var sum = item[1].reduce( function(a,b) {
             return a + parseInt(b.value);
         }, 0);
+        var max = Math.max.apply(Math,item[1].map(function(o){return o.value;}))
         options.push(
             {
                 title: {text: item[0]},
@@ -157,10 +171,15 @@ function prepareChartOptions(dataList) {
                     {data: item[1]},
                     {
                         data: item[1].map( function(x) { return (1.0 * x.value/sum).toFixed(4);}),
-                        yAxisIndex: 1
+                        xAxisIndex: 1
                     },
-                    {data: item[1]}
-                ]
+                    {data: convertLogData(item[1])},
+                    {data: convertLogData(item[1])},
+
+                ],
+                visualMap: {
+                    max : Math.log(max)/Math.log(1.1)
+                }
             }
             )
     });
@@ -172,282 +191,282 @@ function setOption(rst, optionType) {
     dataList = rst.data.slice(0,timelineLength).map(csvToDataList);
     nameList = dataList.map(function(x){return x[0];});
     provinceList = rst.meta.fields.slice(1); //first grid in the matrix is empty
-    mapOption = {
-        baseOption: {
-            timeline: {
-                autoPlay: false,
-                playInterval: 1000,
-                axisType: 'category',
-                data: nameList,
-                lineStyle : {
-                    color: '#fff'
-                },
-                label: {
-                    normal : {
-                        textStyle: {
-                            color: '#fff'
-                        }
-                    },
-                    emphasis: {
-                        textStyle: {
-                            color: '#a6c84c'
-                        }
-                    }
-                },
-                itemStyle: {
-                    normal : {
-                        color: '#fff'
-                    }
-                },
-                checkpointStyle: {
-                    color: '#a6c84c',
-                    borderColor: 'rgba(166,200,76,0.5)'   
-                },
-                controlStyle: {
-                    normal : {
-                        color: '#fff',
-                        borderColor: '#fff'   
-                    },
-                    emphasis: {
-                        color: '#a6c84c',
-                        borderColor: 'rgba(166,200,76,0.5)' 
-                    }
-                }
-            },
-            backgroundColor: '#404a59',
-            title : {
-                text: '就医人群地区分布',
-                subtext: '根据患者手机号获取地区',
-                left: 'center',
-                textStyle : {
-                    color: '#fff'
-                }
-            },
-            tooltip : {
-                trigger: 'item',
-                formatter: function (params,ticket,callback) {
-                    if(params.name == "") {return;}
-                    var res = params.name +'<br/>';
-                    var value = 0;
-                    if (params.data.value) {value = String(params.data.value[2]);}
+    // mapOption = {
+    //     baseOption: {
+    //         timeline: {
+    //             autoPlay: false,
+    //             playInterval: 1000,
+    //             axisType: 'category',
+    //             data: nameList,
+    //             lineStyle : {
+    //                 color: '#fff'
+    //             },
+    //             label: {
+    //                 normal : {
+    //                     textStyle: {
+    //                         color: '#fff'
+    //                     }
+    //                 },
+    //                 emphasis: {
+    //                     textStyle: {
+    //                         color: '#a6c84c'
+    //                     }
+    //                 }
+    //             },
+    //             itemStyle: {
+    //                 normal : {
+    //                     color: '#fff'
+    //                 }
+    //             },
+    //             checkpointStyle: {
+    //                 color: '#a6c84c',
+    //                 borderColor: 'rgba(166,200,76,0.5)'   
+    //             },
+    //             controlStyle: {
+    //                 normal : {
+    //                     color: '#fff',
+    //                     borderColor: '#fff'   
+    //                 },
+    //                 emphasis: {
+    //                     color: '#a6c84c',
+    //                     borderColor: 'rgba(166,200,76,0.5)' 
+    //                 }
+    //             }
+    //         },
+    //         backgroundColor: '#404a59',
+    //         title : {
+    //             text: '就医人群地区分布',
+    //             subtext: '根据患者手机号获取地区',
+    //             left: 'center',
+    //             textStyle : {
+    //                 color: '#fff'
+    //             }
+    //         },
+    //         tooltip : {
+    //             trigger: 'item',
+    //             formatter: function (params,ticket,callback) {
+    //                 if(params.name == "") {return;}
+    //                 var res = params.name +'<br/>';
+    //                 var value = 0;
+    //                 if (params.data.value) {value = String(params.data.value[2]);}
                     
-                    res += '排名: ' + (params.dataIndex + 1);
-                    res += '\t人数: ' + value;
-                    setTimeout(function (){callback(ticket, res);}, 1);
-                    return 'loading';
-                }
-            },
-            visualMap: {
-                min: 0,
-                // max: 150,
-                left: 'right',
-                top: 'top',
-                dimension:3,
-                seriesIndex: 0,    
-                calculable: true,
-                formatter: function (value, value2) {
-                    return Math.round(Math.exp(value * Math.log(1.1)));
-                },
-                target:{
-                    inRange: {
-                        color: ['#50a3ba','#eac736','#d94e5d']
-                    },
-                    outOfRange: {
-                        color: ['#444']
-                    }
-                },
-                controller: {
-                    inRange: {
-                        color: ['#50a3ba','#eac736','#d94e5d']
-                    },
-                    outOfRange: {
-                        color: ['#444']
-                    }            
-                }
-            },
-            series:    [
-            {
-                type: 'map',
-                mapType: 'china',
-                // roam: true,
-                label: {
-                    normal: {
-                        show: true
-                    },
-                    emphasis: {
-                        show: true
-                    }
-                },
-                // selectedMode:'single',
-                itemStyle: {
-                    normal: {
-                        opacity:0.8
-                    },
-                    emphasis: {
-                        shadowBlur: 20,
-                        shadowColor: '#fff'
-                    }
-                },
-            }]
-        },
-        options: prepareMapOptions(dataList)
-    };
+    //                 res += '排名: ' + (params.dataIndex + 1);
+    //                 res += '\t人数: ' + value;
+    //                 setTimeout(function (){callback(ticket, res);}, 1);
+    //                 return 'loading';
+    //             }
+    //         },
+    //         visualMap: {
+    //             min: 0,
+    //             // max: 150,
+    //             left: 'right',
+    //             top: 'top',
+    //             dimension:3,
+    //             seriesIndex: 0,    
+    //             calculable: true,
+    //             formatter: function (value, value2) {
+    //                 return Math.round(Math.exp(value * Math.log(1.1)));
+    //             },
+    //             target:{
+    //                 inRange: {
+    //                     color: ['#50a3ba','#eac736','#d94e5d']
+    //                 },
+    //                 outOfRange: {
+    //                     color: ['#444']
+    //                 }
+    //             },
+    //             controller: {
+    //                 inRange: {
+    //                     color: ['#50a3ba','#eac736','#d94e5d']
+    //                 },
+    //                 outOfRange: {
+    //                     color: ['#444']
+    //                 }            
+    //             }
+    //         },
+    //         series:    [
+    //         {
+    //             type: 'map',
+    //             mapType: 'china',
+    //             // roam: true,
+    //             label: {
+    //                 normal: {
+    //                     show: true
+    //                 },
+    //                 emphasis: {
+    //                     show: true
+    //                 }
+    //             },
+    //             selectedMode:'single',
+    //             itemStyle: {
+    //                 normal: {
+    //                     opacity:0.8
+    //                 },
+    //                 emphasis: {
+    //                     shadowBlur: 20,
+    //                     shadowColor: '#fff'
+    //                 }
+    //             },
+    //         }]
+    //     },
+    //     options: prepareMapOptions(dataList)
+    // };
 
-    geoOption = {
-        baseOption: {
-           timeline: {
-                autoPlay: false,
-                playInterval: 1000,
-                axisType: 'category',
-                data: nameList,
-                lineStyle : {
-                    color: '#fff'
-                },
-                label: {
-                    normal : {
-                        textStyle: {
-                            color: '#fff'
-                        }
-                    },
-                    emphasis: {
-                        textStyle: {
-                            color: '#a6c84c'
-                        }
-                    }
-                },
-                itemStyle: {
-                    normal : {
-                        color: '#fff'
-                    }
-                },
-                checkpointStyle: {
-                    color: '#a6c84c',
-                    borderColor: 'rgba(166,200,76,0.5)'   
-                },
-                controlStyle: {
-                    normal : {
-                        color: '#fff',
-                        borderColor: '#fff'   
-                    },
-                    emphasis: {
-                        color: '#a6c84c',
-                        borderColor: 'rgba(166,200,76,0.5)' 
-                    }
-                }
-            },
-            backgroundColor: '#404a59',
-            title : {
-                text: '就医人群地区分布',
-                subtext: '根据患者手机号获取地区',
-                left: 'center',
-                textStyle : {
-                    color: '#fff'
-                }
-            },
-            tooltip : {
-                trigger: 'item',
-                formatter: function (params,ticket,callback) {
-                    // console.log(params);
-                    if(params.name == "") {return;}
-                    var res = params.name +'<br/>';
-                    var value = 0;
-                    if (params.data.value) {value = String(params.data.value[2]);}
+    // geoOption = {
+    //     baseOption: {
+    //        timeline: {
+    //             autoPlay: false,
+    //             playInterval: 1000,
+    //             axisType: 'category',
+    //             data: nameList,
+    //             lineStyle : {
+    //                 color: '#fff'
+    //             },
+    //             label: {
+    //                 normal : {
+    //                     textStyle: {
+    //                         color: '#fff'
+    //                     }
+    //                 },
+    //                 emphasis: {
+    //                     textStyle: {
+    //                         color: '#a6c84c'
+    //                     }
+    //                 }
+    //             },
+    //             itemStyle: {
+    //                 normal : {
+    //                     color: '#fff'
+    //                 }
+    //             },
+    //             checkpointStyle: {
+    //                 color: '#a6c84c',
+    //                 borderColor: 'rgba(166,200,76,0.5)'   
+    //             },
+    //             controlStyle: {
+    //                 normal : {
+    //                     color: '#fff',
+    //                     borderColor: '#fff'   
+    //                 },
+    //                 emphasis: {
+    //                     color: '#a6c84c',
+    //                     borderColor: 'rgba(166,200,76,0.5)' 
+    //                 }
+    //             }
+    //         },
+    //         backgroundColor: '#404a59',
+    //         title : {
+    //             text: '就医人群地区分布',
+    //             subtext: '根据患者手机号获取地区',
+    //             left: 'center',
+    //             textStyle : {
+    //                 color: '#fff'
+    //             }
+    //         },
+    //         tooltip : {
+    //             trigger: 'item',
+    //             formatter: function (params,ticket,callback) {
+    //                 // console.log(params);
+    //                 if(params.name == "") {return;}
+    //                 var res = params.name +'<br/>';
+    //                 var value = 0;
+    //                 if (params.data.value) {value = String(params.data.value[2]);}
                     
-                    res += '排名: ' + (params.dataIndex + 1);
-                    res += '\t人数: ' + value;
-                    setTimeout(function (){callback(ticket, res);}, 1);
-                    return 'loading';
-                }
-            },
-            geo: {
-                map: 'china',
-                // zlevel: 1,
-                label: {
-                    emphasis: {
-                        show: false
-                    }
-                },
-                roam: true,
-                itemStyle: {
-                    normal: {
-                        areaColor: '#323c48',
-                        borderColor: '#404a59'
-                    },
-                    emphasis: {
-                        areaColor: '#2a333d'
-                    }
-                }
-            },
-            series: [
-                {
-                    type: 'effectScatter',
-                    coordinateSystem: 'geo',
-                    zlevel: 1,
-                    rippleEffect: {
-                        brushType: 'stroke'
-                    },
-                    label: {
-                        emphasis: {
-                            show: false
-                        }
-                    },
-                    symbolSize: function (val) {
-                        return Math.max(Math.log(val[2])/Math.log(3),1);
-                    },
-                    itemStyle: {
-                        normal: {
-                            color: '#a6c84c',
-                            opacity:0.5
-                        },
-                        emphasis: {
-                            opacity: 1
-                        }
-                    }
-                }
-                ,{
-                    type: 'lines',
-                    zlevel: 1,
-                    effect: {
-                        show: true,
-                        period: 6,
-                        trailLength: 0
-                    },
-                    lineStyle: {
-                        normal: {
-                            color: '#a6c84c',
-                            width: 1,
-                            opacity: 0.4,
-                            curveness: 0.2
-                        }
-                    }
-                }
-                ,{
-                    type: 'scatter',
-                    coordinateSystem: 'geo',
-                    // zlevel: 1,
-                    label: {
-                        normal: {
-                            show: true,
-                            position: 'right',
-                            formatter: function (params) {
-                                var idx = params.dataIndex + 1;
-                                var name = params.data.name
-                                return  '[' + idx + ']' + name;
-                            }
-                        }
-                    },
-                    symbolSize: 1,
-                    itemStyle: {
-                        normal: {
-                            color: '#fff',
-                            opacity:0.8
-                        }
-                    }
-                }
-            ]
-        },
-        options: prepareGeoOptions(dataList)
-    }
+    //                 res += '排名: ' + (params.dataIndex + 1);
+    //                 res += '\t人数: ' + value;
+    //                 setTimeout(function (){callback(ticket, res);}, 1);
+    //                 return 'loading';
+    //             }
+    //         },
+    //         geo: {
+    //             map: 'china',
+    //             // zlevel: 1,
+    //             label: {
+    //                 emphasis: {
+    //                     show: false
+    //                 }
+    //             },
+    //             roam: true,
+    //             itemStyle: {
+    //                 normal: {
+    //                     areaColor: '#323c48',
+    //                     borderColor: '#404a59'
+    //                 },
+    //                 emphasis: {
+    //                     areaColor: '#2a333d'
+    //                 }
+    //             }
+    //         },
+    //         series: [
+    //             {
+    //                 type: 'effectScatter',
+    //                 coordinateSystem: 'geo',
+    //                 zlevel: 1,
+    //                 rippleEffect: {
+    //                     brushType: 'stroke'
+    //                 },
+    //                 label: {
+    //                     emphasis: {
+    //                         show: false
+    //                     }
+    //                 },
+    //                 symbolSize: function (val) {
+    //                     return Math.max(Math.log(val[2])/Math.log(3),1);
+    //                 },
+    //                 itemStyle: {
+    //                     normal: {
+    //                         color: '#a6c84c',
+    //                         opacity:0.5
+    //                     },
+    //                     emphasis: {
+    //                         opacity: 1
+    //                     }
+    //                 }
+    //             }
+    //             ,{
+    //                 type: 'lines',
+    //                 zlevel: 1,
+    //                 effect: {
+    //                     show: true,
+    //                     period: 6,
+    //                     trailLength: 0
+    //                 },
+    //                 lineStyle: {
+    //                     normal: {
+    //                         color: '#a6c84c',
+    //                         width: 1,
+    //                         opacity: 0.4,
+    //                         curveness: 0.2
+    //                     }
+    //                 }
+    //             }
+    //             ,{
+    //                 type: 'scatter',
+    //                 coordinateSystem: 'geo',
+    //                 // zlevel: 1,
+    //                 label: {
+    //                     normal: {
+    //                         show: true,
+    //                         position: 'right',
+    //                         formatter: function (params) {
+    //                             var idx = params.dataIndex + 1;
+    //                             var name = params.data.name
+    //                             return  '[' + idx + ']' + name;
+    //                         }
+    //                     }
+    //                 },
+    //                 symbolSize: 1,
+    //                 itemStyle: {
+    //                     normal: {
+    //                         color: '#fff',
+    //                         opacity:0.8
+    //                     }
+    //                 }
+    //             }
+    //         ]
+    //     },
+    //     options: prepareGeoOptions(dataList)
+    // }
 
     chartOption = {
         baseOption: {
@@ -468,41 +487,42 @@ function setOption(rst, optionType) {
                     saveAsImage: {show: true}
                 }
             },
-            tooltip : {
-                trigger: 'item', // or 'axis'
-                formatter: function (params,ticket,callback) {
-                                    var res = params.name +'<br/>';
-                                    res += '排名: ' + (params.dataIndex + 1);
-                                    res += '\n人数: ' + params.data.value;
-                                    if(params.percent) {
-                                        res += '\n百分比: ' + params.percent + '%'; 
-                                    }
-                                    setTimeout(function (){callback(ticket, res);}, 1);
-                                    return 'loading';
-                                }
-            },
+            // tooltip : {
+                // trigger: 'item', // or 'axis'
+            //     formatter: function (params,ticket,callback) {
+            //                         var res = params.name +'<br/>';
+            //                         res += '排名: ' + (params.dataIndex + 1);
+            //                         res += '\n人数: ' + params.data.value;
+            //                         if(params.percent) {
+            //                             res += '\n百分比: ' + params.percent + '%'; 
+            //                         }
+            //                         setTimeout(function (){callback(ticket, res);}, 1);
+            //                         return 'loading';
+            //                     }
+            // },
             legend: {
                 x: 'center',
-                data: ['人数','百分比','饼图'],
+                data: ['人数','百分比','饼图','地图'],
                 selected: {
                     '百分比': false,
-                    // '饼图': false
+                    '饼图': false
                 }
             },
             calculable : true,
             grid: {
-                top: 80,
-                bottom: 100
+                top: '20%',
+                // bottom: 100
             },
-            xAxis: [
+            yAxis: [
                 {
                     'type':'category',
                     'axisLabel':{'interval':0},
                     'data': provinceList,
-                    splitLine: {show: false}
+                    splitLine: {show: false},
+                    inverse: true
                 }
             ],
-            yAxis: [
+            xAxis: [
                 {
                     type: 'value',
                     name: '人数',
@@ -514,17 +534,48 @@ function setOption(rst, optionType) {
                     // min: -0.2
                 }           
             ],
+            // color: ['#50a3ba','#eac736','#d94e5d'],
+            visualMap: {
+                min: 0,
+                // max: 150,
+                left: 'right',
+                top: 'top',
+                dimension:1,
+                // seriesIndex: 3,  
+                calculable: true,
+                formatter: function (value, value2) {
+                    return Math.round(Math.exp(value * Math.log(1.1)));
+                },
+                target:{
+                    inRange: {
+                        color: ['#50a3ba','#eac736','#d94e5d']
+                    },
+                    outOfRange: {
+                        color: ['#444']
+                    }
+                },
+                controller: {
+                    inRange: {
+                        color: ['#50a3ba','#eac736','#d94e5d']
+                    },
+                    outOfRange: {
+                        color: ['#444']
+                    }            
+                },
+                right: 'center',
+                top: 'center'
+            },
             series: [
                 {
                     name: '人数', 
                     type: 'bar',
                     label: {
                         normal: {
-                            show: true,
-                            position: 'top'
+                            show: false,
                         },
                         emphasis: {
-                            show: true
+                            show: true,
+                            position: 'right'
                         }
                     }
                 },
@@ -548,8 +599,8 @@ function setOption(rst, optionType) {
                 {
                     name: '饼图', 
                     type: 'pie', 
-                    center: ['75%', '45%'],
-                    radius: '40%',
+                    center: ['35%', '65%'],
+                    radius: '30%',
                     label: {
                         normal: {
                             show: true
@@ -566,24 +617,52 @@ function setOption(rst, optionType) {
                             show: true
                         }
                     },
+                },
+                {
+                    name: '地图', 
+                    type: 'map',
+                    mapType: 'china',
+                    // roam: true,
+                    label: {
+                        normal: {
+                            show: true
+                        },
+                        emphasis: {
+                            show: true
+                        }
+                    },
+                    selectedMode:'single',
+                    itemStyle: {
+                        normal: {
+                            opacity:0.8
+                        },
+                        emphasis: {
+                            shadowBlur: 20,
+                            shadowColor: '#fff'
+                        }
+                    },
+                    top: '25%',
+                    left: '50%',
+                    // right: '15%',
+                    bottom: '15%'
                 }
             ]
         },
         options:prepareChartOptions(dataList)
     };
 
-    if (optionType=='geo') {
-        return geoOption;
-    }
-    else if (optionType == 'map') {
-        return mapOption;
-    }
-    else if (optionType == 'chart') {
+    // if (optionType=='geo') {
+    //     return geoOption;
+    // }
+    // else if (optionType == 'map') {
+    //     return mapOption;
+    // }
+    // else if (optionType == 'chart') {
         return chartOption;
-    }
-    else {
-        alert ('type error!');
-    }
+    // }
+    // else {
+    //     alert ('type error!');
+    // }
 }
 
 myChart.on('timelinechanged', function (params) {
@@ -603,27 +682,30 @@ myChart.on('timelinechanged', function (params) {
 //     console.log("Time used:", updateTime);
 // }
 
-$('.province').on('click', function () {
-    file = ($('#provinceFile'))[0].files;
-    handleFiles(file,'map');
-});
+// $('.province').on('click', function () {
+//     file = ($('#provinceFile'))[0].files;
+//     handleFiles(file,'map');
+// });
 $('#provinceFile.inputfile').change(function () {
-    file = ($('#provinceFile'))[0].files;
-    handleFiles(file,'map');
-});
-$('.city').on('click', function () {
-    file = ($('#cityFile'))[0].files;
-    handleFiles(file,'geo');
-});
-$('#cityFile.inputfile').change(function () {
-    file = ($('#cityFile'))[0].files;
-    handleFiles(file,'geo');
-});
-$('.chart').on('click', function () {
     file = ($('#provinceFile'))[0].files;
     handleFiles(file,'chart');
 });
+// $('.city').on('click', function () {
+//     file = ($('#cityFile'))[0].files;
+//     handleFiles(file,'geo');
+// });
+// $('#cityFile.inputfile').change(function () {
+//     file = ($('#cityFile'))[0].files;
+//     handleFiles(file,'geo');
+// });
+// $('.chart').on('click', function () {
+//     file = ($('#provinceFile'))[0].files;
+//     handleFiles(file,'chart');
+// });
 
+myChart.on('mapselectchanged', function (param){
+    console.log(param);
+});
 
     </script>
 </body>
