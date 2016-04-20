@@ -7,10 +7,10 @@
 </head>
 
 <body style="height: 100%">
-<div class='label'>
+<!-- <div class='label'>
     <input type="file" id='provinceFile' class='inputfile'/> 
     <label for="provinceFile"><span></span><strong>省份数据</strong></lable>    
-</div>
+</div> -->
 <!-- <div class='label'>
     <input type="file" id='cityFile' class='inputfile'/> 
     <label for="cityFile"><span></span><strong>城市数据</strong></lable>    
@@ -23,7 +23,7 @@
     </ul>
 </div>
 <div style="clear:both;"></div> -->
-<div id="container" style="height: 85%"></div>
+<div id="container" style="height: 100%"></div>
 
 <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
 <script type="text/javascript" src="js/echarts.min.js"></script>
@@ -39,23 +39,34 @@ option = null;
 
 var timelineLength = 40;
 
-function  handleFiles(files, optionType)  
-{  
-    var file = files[0];  
-    if (!file) {
-        alert("未选择相关数据文件！");
-        return;
-    }
-    Papa.parse(file, {
-        header: true,
-        encoding: 'gbk',
-        complete: function(rst) {
-            option = setOption(rst,optionType);
-            myChart.setOption(option, true);
-            deptList = rst.data.map(csvToDataList);    
-        } 
-    });
-} 
+// function  handleFiles(files, optionType)  
+// {  
+//     var file = files[0];  
+//     if (!file) {
+//         alert("未选择相关数据文件！");
+//         return;
+//     }
+//     Papa.parse(file, {
+//         header: true,
+//         encoding: 'gbk',
+//         complete: function(rst) {
+//             option = setOption(rst,optionType);
+//             myChart.setOption(option, true);
+//             deptList = rst.data.map(csvToDataList);    
+//         } 
+//     });
+// } 
+
+Papa.parse('data/prov_dept_cnt_utf.csv', {
+    header: true,
+    // encoding: 'gbk',
+    download: true,
+    complete: function(rst) {
+        option = setOption(rst,'chart');
+        myChart.setOption(option, true);
+        deptList = rst.data.map(csvToDataList);    
+    } 
+});
 
 function csvToDataList(x) {
     var idx = x[""];
@@ -510,7 +521,7 @@ function setOption(rst, optionType) {
             },
             calculable : true,
             grid: {
-                top: '20%',
+                // top: '20%',
                 // bottom: 100
             },
             yAxis: [
@@ -641,9 +652,9 @@ function setOption(rst, optionType) {
                             shadowColor: '#fff'
                         }
                     },
-                    top: '25%',
+                    top: '15%',
                     left: '50%',
-                    // right: '15%',
+                    right: '10%',
                     bottom: '15%'
                 }
             ]
@@ -686,10 +697,10 @@ myChart.on('timelinechanged', function (params) {
 //     file = ($('#provinceFile'))[0].files;
 //     handleFiles(file,'map');
 // });
-$('#provinceFile.inputfile').change(function () {
-    file = ($('#provinceFile'))[0].files;
-    handleFiles(file,'chart');
-});
+// $('#provinceFile.inputfile').change(function () {
+//     file = ($('#provinceFile'))[0].files;
+//     handleFiles(file,'chart');
+// });
 // $('.city').on('click', function () {
 //     file = ($('#cityFile'))[0].files;
 //     handleFiles(file,'geo');
@@ -703,9 +714,9 @@ $('#provinceFile.inputfile').change(function () {
 //     handleFiles(file,'chart');
 // });
 
-myChart.on('mapselectchanged', function (param){
-    console.log(param);
-});
+// myChart.on('mapselectchanged', function (param){
+//     console.log(param);
+// });
 
     </script>
 </body>
