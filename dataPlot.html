@@ -38,7 +38,12 @@ var app = {};
 option = null;
 
 var timelineLength = 40;
+var provinceList = [];
 
+var dept_prov_month_cnt;
+$.getJSON("data/dept_prov_month_cnt.json", function(rst) {
+    dept_prov_month_cnt = rst;
+});
 // function  handleFiles(files, optionType)  
 // {  
 //     var file = files[0];  
@@ -168,6 +173,7 @@ var convertLogData = function (data) {
 // }
 
 function prepareChartOptions(dataList) {
+    // console.log(provinceList);
     options = [];
     dataList.forEach(function (item, i) {
         //item: a list of k/v objects
@@ -175,24 +181,47 @@ function prepareChartOptions(dataList) {
             return a + parseInt(b.value);
         }, 0);
         var max = Math.max.apply(Math,item[1].map(function(o){return o.value;}))
-        options.push(
-            {
-                title: {text: item[0]},
-                series: [
-                    {data: item[1]},
+        series = [
+                    {data: item[1]}, //人数
                     {
                         data: item[1].map( function(x) { return (1.0 * x.value/sum).toFixed(4);}),
                         xAxisIndex: 1
-                    },
-                    {data: convertLogData(item[1])},
-                    {data: convertLogData(item[1])},
-
-                ],
+                    }, //百分比
+                    {data: convertLogData(item[1])}, //饼图
+                    {data: convertLogData(item[1])}, //地图
+                    // {
+                    //     name: '新疆',
+                    //     type: 'line',
+                    //     xAxisIndex: 2,
+                    //     yAxisIndex: 1,
+                    //     data: [1,2,3,4,5,6,7,5,4,3,1,2],
+                    // },
+                    // {
+                    //     name: '上海',
+                    //     type: 'line',
+                    //     xAxisIndex: 2,
+                    //     yAxisIndex: 1,
+                    //     data: null
+                    // },
+                ];
+        provinceList.forEach(function (provName, i) {
+            series.push(
+                {
+                    name: provName,
+                    type: 'line',
+                    xAxisIndex: 2,
+                    yAxisIndex: 1,
+                });
+        });
+        options.push(
+            {
+                title: {text: item[0]},
+                series: series,
                 visualMap: {
                     max : Math.log(max)/Math.log(1.1)
                 }
             }
-            )
+        );
     });
     return options;  
 }
@@ -520,30 +549,43 @@ function setOption(rst, optionType) {
                 }
             },
             calculable : true,
-            grid: {
-                // top: '20%',
-                // bottom: 100
-            },
+            grid: [
+                {},
+                {left:'15%',bottom:'15%',width:'30%',height:'30%'}
+            ],
             yAxis: [
                 {
-                    'type':'category',
-                    'axisLabel':{'interval':0},
-                    'data': provinceList,
+                    gridIndex: 0,
+                    type:'category',
+                    axisLabel:{'interval':0},
+                    data: provinceList,
                     splitLine: {show: false},
                     inverse: true
+                },
+                {
+                    gridIndex: 1,
+                    type: 'value',
+                    name: '人数'
                 }
             ],
             xAxis: [
                 {
+                    gridIndex: 0,
                     type: 'value',
                     name: '人数',
                 },
                 {
+                    gridIndex: 0,
                     type: 'value',
                     name: '百分比',
                     // max: 0.2,
                     // min: -0.2
-                }           
+                },
+                {
+                    gridIndex: 1,
+                    type: 'category',
+                    data: ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月']
+                }        
             ],
             // color: ['#50a3ba','#eac736','#d94e5d'],
             visualMap: {
@@ -642,7 +684,7 @@ function setOption(rst, optionType) {
                             show: true
                         }
                     },
-                    selectedMode:'single',
+                    selectedMode:'multiple',
                     itemStyle: {
                         normal: {
                             opacity:0.8
@@ -714,9 +756,48 @@ myChart.on('timelinechanged', function (params) {
 //     handleFiles(file,'chart');
 // });
 
-// myChart.on('mapselectchanged', function (param){
-//     console.log(param);
-// });
+myChart.on('mapselectchanged', function (param){
+    mapList = param.selected;
+    // var selected = Object.keys(mapList).filter(function(key) {
+    //     return mapList[key]
+    // });
+    // var seriesIdx = 4;
+    var option = myChart.getOption();
+    curTimeline = option.title[0].text;
+    // console.log(option);
+    series = [];
+    // selected.forEach(function (item, i) {
+    //     // console.log(item,i);
+    //     series.push({
+    //         name: item,
+    //         // type: 'line',
+    //         // xAxisIndex: 2,
+    //         // yAxisIndex: 1,
+    //         // data: null,
+    //         data: dept_prov_month_cnt[curTimeline][item]
+    //     });
+    // });
+    for (var prov in mapList) {
+        if(mapList[prov]) {
+            series.push({
+                name: prov,
+                data: dept_prov_month_cnt[curTimeline][prov]
+            });
+        }
+        else {
+            series.push({
+                name: prov,
+                data: null
+            });
+        }
+    }
+
+    myChart.setOption({
+        series: series
+    });
+});
+
+
 
     </script>
 </body>
