@@ -40,9 +40,19 @@ option = null;
 var timelineLength = 40;
 var provinceList = [];
 
-var dept_prov_month_cnt;
+var dept_prov_month_cnt = null;
 $.getJSON("data/dept_prov_month_cnt.json", function(rst) {
     dept_prov_month_cnt = rst;
+    Papa.parse('data/prov_dept_cnt_utf.csv', {
+        header: true,
+        // encoding: 'gbk',
+        download: true,
+        complete: function(rst) {
+            option = setOption(rst,'chart');
+            myChart.setOption(option, true);
+            deptList = rst.data.map(csvToDataList);    
+        } 
+    });
 });
 // function  handleFiles(files, optionType)  
 // {  
@@ -62,16 +72,7 @@ $.getJSON("data/dept_prov_month_cnt.json", function(rst) {
 //     });
 // } 
 
-Papa.parse('data/prov_dept_cnt_utf.csv', {
-    header: true,
-    // encoding: 'gbk',
-    download: true,
-    complete: function(rst) {
-        option = setOption(rst,'chart');
-        myChart.setOption(option, true);
-        deptList = rst.data.map(csvToDataList);    
-    } 
-});
+
 
 function csvToDataList(x) {
     var idx = x[""];
@@ -192,6 +193,14 @@ function prepareChartOptions(dataList) {
                     {name:'地图',data: convertLogData(item[1])}, //地图
                 ];
 
+        provinceList.forEach(function (provName, i) {
+            series.push(
+                {
+                    name: provName,
+                    data: dept_prov_month_cnt[item[0]][provName]
+                });
+        });
+        
         options.push(
             {
                 title: {text: item[0]},
@@ -611,14 +620,19 @@ function setOption(rst, optionType) {
             //                         return 'loading';
             //                     }
             // },
-            legend: {
+            legend: [{
                 x: 'center',
                 data: ['人数','百分比','饼图','地图'],
                 selected: {
                     '百分比': false,
                     '饼图': false
-                }
+                },
             },
+            {
+                show: false,
+                data: provinceList
+            }
+            ],
             calculable : true,
             grid: [
                 {},
@@ -746,40 +760,59 @@ myChart.on('timelinechanged', function (params) {
 //     handleFiles(file,'chart');
 // });
 
+// myChart.on('mapselectchanged', function (param){
+//     mapList = param.selected;
+//     // var selected = Object.keys(mapList).filter(function(key) {
+//     //     return mapList[key]
+//     // });
+//     var option = myChart.getOption();
+//     console.log(option);
+//     curTimeline = option.title[0].text;
+//     // console.log(curTimeline);
+//     series = [];
+//     for (var prov in mapList) {
+//         if(mapList[prov]) {
+//             series.push({
+//                 name: prov,
+//                 data: dept_prov_month_cnt[curTimeline][prov]
+//             });
+//         }
+//         else {
+//             series.push({
+//                 name: prov,
+//                 data: null
+//             });
+//         }
+//     }
+//     // console.log(series);
+//     myChart.setOption({
+//         series: series
+//     });
+// });
+
 myChart.on('mapselectchanged', function (param){
     mapList = param.selected;
-    // var selected = Object.keys(mapList).filter(function(key) {
-    //     return mapList[key]
-    // });
-    var option = myChart.getOption();
-    console.log(option);
-    curTimeline = option.title[0].text;
-    // console.log(curTimeline);
-    series = [];
     for (var prov in mapList) {
         if(mapList[prov]) {
-            series.push({
-                name: prov,
-                data: dept_prov_month_cnt[curTimeline][prov]
+            myChart.dispatchAction({
+                type: 'legendSelect',
+                name: prov
             });
         }
         else {
-            series.push({
-                name: prov,
-                data: null
+            myChart.dispatchAction({
+                type: 'legendUnSelect',
+                name: prov
             });
         }
     }
-    // console.log(series);
-    myChart.setOption({
-        series: series
-    });
+    
 });
 
-myChart.on('timelinechanged', function (param){
-    // console.log(param);
-    console.log(myChart.getOption());
-});
+// myChart.on('timelinechanged', function (param){
+//     // console.log(param);
+//     console.log(myChart.getOption());
+// });
 
     </script>
 </body>
