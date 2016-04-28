@@ -182,37 +182,16 @@ function prepareChartOptions(dataList) {
         }, 0);
         var max = Math.max.apply(Math,item[1].map(function(o){return o.value;}))
         series = [
-                    {data: item[1]}, //人数
+                    {name:'人数',data: item[1]}, //人数
                     {
+                        name:'百分比',
                         data: item[1].map( function(x) { return (1.0 * x.value/sum).toFixed(4);}),
                         xAxisIndex: 1
                     }, //百分比
-                    {data: convertLogData(item[1])}, //饼图
-                    {data: convertLogData(item[1])}, //地图
-                    // {
-                    //     name: '新疆',
-                    //     type: 'line',
-                    //     xAxisIndex: 2,
-                    //     yAxisIndex: 1,
-                    //     data: [1,2,3,4,5,6,7,5,4,3,1,2],
-                    // },
-                    // {
-                    //     name: '上海',
-                    //     type: 'line',
-                    //     xAxisIndex: 2,
-                    //     yAxisIndex: 1,
-                    //     data: null
-                    // },
+                    {name:'饼图',data: convertLogData(item[1])}, //饼图
+                    {name:'地图',data: convertLogData(item[1])}, //地图
                 ];
-        provinceList.forEach(function (provName, i) {
-            series.push(
-                {
-                    name: provName,
-                    type: 'line',
-                    xAxisIndex: 2,
-                    yAxisIndex: 1,
-                });
-        });
+
         options.push(
             {
                 title: {text: item[0]},
@@ -508,6 +487,98 @@ function setOption(rst, optionType) {
     //     options: prepareGeoOptions(dataList)
     // }
 
+    series = [
+                {
+                    name: '人数', 
+                    type: 'bar',
+                    label: {
+                        normal: {
+                            show: false,
+                        },
+                        emphasis: {
+                            show: true,
+                            position: 'right'
+                        }
+                    }
+                },
+                {
+                    name: '百分比',
+                    type: 'line',
+                    label: {
+                        normal: {
+                            show: false
+                        },
+                        emphasis: {
+                            show: true,
+                            position: 'top',
+                            formatter: function (params) {
+                                value = (params.value * 100).toFixed(2);
+                                return String(value) + '%';
+                            }
+                        }
+                    }
+                },
+                {
+                    name: '饼图', 
+                    type: 'pie', 
+                    center: ['35%', '35%'],
+                    radius: '30%',
+                    label: {
+                        normal: {
+                            show: true
+                        },
+                        emphasis: {
+                            show: true
+                        }
+                    },
+                    lableLine: {
+                        normal: {
+                            show: false
+                        },
+                        emphasis: {
+                            show: true
+                        }
+                    },
+                },
+                {
+                    name: '地图', 
+                    type: 'map',
+                    mapType: 'china',
+                    // roam: true,
+                    label: {
+                        normal: {
+                            show: true
+                        },
+                        emphasis: {
+                            show: true
+                        }
+                    },
+                    selectedMode:'multiple',
+                    itemStyle: {
+                        normal: {
+                            opacity:0.8
+                        },
+                        emphasis: {
+                            shadowBlur: 20,
+                            shadowColor: '#fff'
+                        }
+                    },
+                    top: '15%',
+                    left: '50%',
+                    right: '10%',
+                    bottom: '15%'
+                }
+            ];
+    provinceList.forEach(function (provName, i) {
+        series.push(
+            {
+                name: provName,
+                type: 'line',
+                xAxisIndex: 2,
+                yAxisIndex: 1,
+            });
+    });
+
     chartOption = {
         baseOption: {
             timeline: {
@@ -519,14 +590,14 @@ function setOption(rst, optionType) {
             title: {
                 subtext: '外地人口就医分布'
             },
-            toolbox: {
-                feature: {
-                    dataView: {show: true, readOnly: false},
-                    magicType: {show: true, type: ['line', 'bar']},
-                    restore: {show: true},
-                    saveAsImage: {show: true}
-                }
-            },
+            // toolbox: {
+            //     feature: {
+            //         dataView: {show: true, readOnly: false},
+            //         magicType: {show: true, type: ['line', 'bar']},
+            //         restore: {show: true},
+            //         saveAsImage: {show: true}
+            //     }
+            // },
             // tooltip : {
                 // trigger: 'item', // or 'axis'
             //     formatter: function (params,ticket,callback) {
@@ -618,88 +689,7 @@ function setOption(rst, optionType) {
                 right: 'center',
                 top: 'center'
             },
-            series: [
-                {
-                    name: '人数', 
-                    type: 'bar',
-                    label: {
-                        normal: {
-                            show: false,
-                        },
-                        emphasis: {
-                            show: true,
-                            position: 'right'
-                        }
-                    }
-                },
-                {
-                    name: '百分比',
-                    type: 'line',
-                    label: {
-                        normal: {
-                            show: false
-                        },
-                        emphasis: {
-                            show: true,
-                            position: 'top',
-                            formatter: function (params) {
-                                value = (params.value * 100).toFixed(2);
-                                return String(value) + '%';
-                            }
-                        }
-                    }
-                },
-                {
-                    name: '饼图', 
-                    type: 'pie', 
-                    center: ['35%', '65%'],
-                    radius: '30%',
-                    label: {
-                        normal: {
-                            show: true
-                        },
-                        emphasis: {
-                            show: true
-                        }
-                    },
-                    lableLine: {
-                        normal: {
-                            show: false
-                        },
-                        emphasis: {
-                            show: true
-                        }
-                    },
-                },
-                {
-                    name: '地图', 
-                    type: 'map',
-                    mapType: 'china',
-                    // roam: true,
-                    label: {
-                        normal: {
-                            show: true
-                        },
-                        emphasis: {
-                            show: true
-                        }
-                    },
-                    selectedMode:'multiple',
-                    itemStyle: {
-                        normal: {
-                            opacity:0.8
-                        },
-                        emphasis: {
-                            shadowBlur: 20,
-                            shadowColor: '#fff'
-                        }
-                    },
-                    top: '15%',
-                    left: '50%',
-                    right: '10%',
-                    bottom: '15%'
-                }
-            ]
+            series: series
         },
         options:prepareChartOptions(dataList)
     };
@@ -761,22 +751,11 @@ myChart.on('mapselectchanged', function (param){
     // var selected = Object.keys(mapList).filter(function(key) {
     //     return mapList[key]
     // });
-    // var seriesIdx = 4;
     var option = myChart.getOption();
+    console.log(option);
     curTimeline = option.title[0].text;
-    // console.log(option);
+    // console.log(curTimeline);
     series = [];
-    // selected.forEach(function (item, i) {
-    //     // console.log(item,i);
-    //     series.push({
-    //         name: item,
-    //         // type: 'line',
-    //         // xAxisIndex: 2,
-    //         // yAxisIndex: 1,
-    //         // data: null,
-    //         data: dept_prov_month_cnt[curTimeline][item]
-    //     });
-    // });
     for (var prov in mapList) {
         if(mapList[prov]) {
             series.push({
@@ -791,13 +770,16 @@ myChart.on('mapselectchanged', function (param){
             });
         }
     }
-
+    // console.log(series);
     myChart.setOption({
         series: series
     });
 });
 
-
+myChart.on('timelinechanged', function (param){
+    // console.log(param);
+    console.log(myChart.getOption());
+});
 
     </script>
 </body>
