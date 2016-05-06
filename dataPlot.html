@@ -525,6 +525,18 @@ function setOption(rst, optionType) {
                             show: true,
                             position: 'right'
                         }
+                    },
+                    tooltip : {
+                        formatter: function (params,ticket,callback) {
+                                            var res = params.name +'<br/>';
+                                            res += '排名: ' + (params.dataIndex + 1);
+                                            res += '\n人数: ' + params.data.value;
+                                            // if(params.percent) {
+                                            //     res += '\n百分比: ' + params.percent + '%'; 
+                                            // }
+                                            setTimeout(function (){callback(ticket, res);}, 1);
+                                            return 'loading';
+                                        }
                     }
                 },
                 {
@@ -565,6 +577,18 @@ function setOption(rst, optionType) {
                             show: true
                         }
                     },
+                    tooltip : {
+                        formatter: function (params,ticket,callback) {
+                                            var res = params.name +'<br/>';
+                                            res += '排名: ' + (params.dataIndex + 1);
+                                            res += '\n人数: ' + params.data.value[0];
+                                            if(params.percent) {
+                                                res += '\n百分比: ' + params.percent + '%'; 
+                                            }
+                                            setTimeout(function (){callback(ticket, res);}, 1);
+                                            return 'loading';
+                                        }
+                    }
                 },
                 {
                     name: '地图', 
@@ -588,6 +612,15 @@ function setOption(rst, optionType) {
                             shadowBlur: 20,
                             shadowColor: '#fff'
                         }
+                    },
+                    tooltip : {
+                        formatter: function (params,ticket,callback) {
+                                            var res = params.name +'<br/>';
+                                            res += '排名: ' + (params.dataIndex + 1);
+                                            res += '\n人数: ' + params.data.value[0];
+                                            setTimeout(function (){callback(ticket, res);}, 1);
+                                            return 'loading';
+                                        }
                     },
                     top: '15%',
                     left: '50%',
@@ -624,19 +657,8 @@ function setOption(rst, optionType) {
             //         saveAsImage: {show: true}
             //     }
             // },
-            // tooltip : {
-                // trigger: 'item', // or 'axis'
-            //     formatter: function (params,ticket,callback) {
-            //                         var res = params.name +'<br/>';
-            //                         res += '排名: ' + (params.dataIndex + 1);
-            //                         res += '\n人数: ' + params.data.value;
-            //                         if(params.percent) {
-            //                             res += '\n百分比: ' + params.percent + '%'; 
-            //                         }
-            //                         setTimeout(function (){callback(ticket, res);}, 1);
-            //                         return 'loading';
-            //                     }
-            // },
+            tooltip : {
+            },
             legend: [{
                 x: 'center',
                 data: ['人数','百分比','饼图','地图'],
@@ -678,11 +700,17 @@ function setOption(rst, optionType) {
                     gridIndex: 0,
                     type: 'value',
                     name: '人数',
+                    splitLine : {
+                        show : false
+                    }
                 },
                 {
                     gridIndex: 0,
                     type: 'value',
                     name: '百分比',
+                    splitLine : {
+                        show : false
+                    }
                     // max: 0.2,
                     // min: -0.2
                 },
