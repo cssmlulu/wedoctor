@@ -14,15 +14,17 @@
 <!-- <div class='label'>
     <input type="file" id='cityFile' class='inputfile'/> 
     <label for="cityFile"><span></span><strong>城市数据</strong></lable>    
-</div>
+</div> -->
 <div id="tabs1">
     <ul>
-        <li><a href="#" class='province'><span>按省份分布</span></a></li>
+        <!-- <li><a href="#" class='province'><span>按省份分布</span></a></li>
         <li><a href="#" class='city'><span>按城市分布</span></a></li>
-        <li><a href="#" class='chart'><span>图表模式</span></a></li>
+        <li><a href="#" class='chart'><span>图表模式</span></a></li> -->
+        <li><a href="#" class='dept'><span>按科室分布</span></a></li>
+        <li><a href="#" class='hosp'><span>按医院分布</span></a></li>
     </ul>
 </div>
-<div style="clear:both;"></div> -->
+<div style="clear:both;"></div>
 <div id="container" style="height: 100%"></div>
 
 <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
@@ -37,21 +39,36 @@ var myChart = echarts.init(dom);
 var app = {};
 option = null;
 
-var timelineLength = 40;
+var timelineLength = 60;
 var provinceList = [];
 
-var dept_prov_month_cnt = null;
-$.getJSON("data/dept_prov_month_cnt.json", function(rst) {
-    dept_prov_month_cnt = rst;
-    Papa.parse('data/prov_dept_cnt_utf.csv', {
-        header: true,
-        // encoding: 'gbk',
-        download: true,
-        complete: function(rst) {
-            option = setOption(rst,'chart');
-            myChart.setOption(option, true);
-            deptList = rst.data.map(csvToDataList);    
-        } 
+$(".dept").click(function(){
+    $.getJSON("data/dept_prov_month_cnt.json", function(rst) {
+        prov_month_cnt = rst;
+        Papa.parse('data/prov_dept_cnt_utf.csv', {
+            header: true,
+            download: true,
+            complete: function(rst) {
+                option = setOption(rst,'chart');
+                myChart.setOption(option, true);
+                deptList = rst.data.map(csvToDataList);    
+            } 
+        });
+    });
+});
+
+$(".hosp").click(function(){
+    $.getJSON("data/hosp_prov_month_cnt.json", function(rst) {
+        prov_month_cnt = rst;
+        Papa.parse('data/prov_hosp_cnt_utf.csv', {
+            header: true,
+            download: true,
+            complete: function(rst) {
+                option = setOption(rst,'chart');
+                myChart.setOption(option, true);
+                deptList = rst.data.map(csvToDataList);    
+            } 
+        });
     });
 });
 // function  handleFiles(files, optionType)  
@@ -197,7 +214,7 @@ function prepareChartOptions(dataList) {
             series.push(
                 {
                     name: provName,
-                    data: dept_prov_month_cnt[item[0]][provName]
+                    data: prov_month_cnt[item[0]][provName]
                 });
         });
         
@@ -630,7 +647,10 @@ function setOption(rst, optionType) {
             },
             {
                 show: false,
-                data: provinceList
+                data: provinceList,
+                selected: {
+                    '上海':false
+                },
             }
             ],
             calculable : true,
